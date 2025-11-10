@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from collections import Counter
+from joblib import Parallel, delayed
 
 # -------------------------
 # Implementação da Árvore
@@ -86,24 +87,30 @@ class DecisionTree:
 # Implementação do Random Forest
 # -------------------------
 class OurRandomForest:
-    def __init__(self, n_trees=10, max_depth=None, min_samples_split=2, max_features=None):
+    def __init__(self, n_trees=10, max_depth=None, min_samples_split=2, max_features=None, n_jobs=None):
         self.n_trees = n_trees
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.max_features = max_features
+        self.n_jobs = n_jobs
         self.trees = []
 
+    def _build_tree(self, X, y):
+        idxs = np.random.choice(len(X), len(X), replace=True)
+        X_sample, y_sample = X[idxs], y[idxs]
+        
+        tree = DecisionTree(
+            max_depth=self.max_depth,
+            min_samples_split=self.min_samples_split,
+            n_features=self.max_features
+        )
+        tree.fit(X_sample, y_sample)
+        return tree
+
     def fit(self, X, y):
-        self.trees = []
-        for _ in range(self.n_trees):
-            tree = DecisionTree(max_depth=self.max_depth,
-                                min_samples_split=self.min_samples_split,
-                                n_features=self.max_features)
-            # Bootstrap sample
-            idxs = np.random.choice(len(X), len(X), replace=True)
-            X_sample, y_sample = X[idxs], y[idxs]
-            tree.fit(X_sample, y_sample)
-            self.trees.append(tree)
+        self.trees = Parallel(n_jobs=self.n_jobs)(
+            delayed(self._build_tree)(X, y) for _ in range(self.n_trees)
+        )
 
     def predict(self, X):
         tree_preds = np.array([tree.predict(X) for tree in self.trees])
