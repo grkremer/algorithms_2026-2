@@ -1,0 +1,27 @@
+FUNÇÃO Treinar_Arvore(Dados, Profundidade_Atual)
+    // 1. Condições de Parada
+    SE (Todos os exemplos em Dados pertencem à mesma Classe) OU
+       (Profundidade_Atual >= Profundidade_Máxima) OU
+       (Número de exemplos em Dados < Mínimo_de_Exemplos_para_Split) ENTÃO
+        RETORNAR Nó_Folha(Classe_Majoritária(Dados))
+    FIM SE
+    // 2. Encontrar o Melhor Split (Melhor Atributo e Ponto de Corte)
+    Melhor_Split = ENCONTRAR_MELHOR_SPLIT(Dados)
+    SE Melhor_Split == NULO OU (Ganho_de_Informação(Melhor_Split) <= 0) ENTÃO
+        // Não há mais splits úteis
+        RETORNAR Nó_Folha(Classe_Majoritária(Dados))
+    FIM SE
+    // 3. Dividir os Dados
+    (Dados_Esquerda, Dados_Direita) = APLICAR_SPLIT(Dados, Melhor_Split)
+
+    // 4. Construir o Nó Interno
+    Nó_Raiz = Novo_Nó_Interno(Melhor_Split)
+    // 5. Chamadas Recursivas (Construir Sub-árvores)
+    Nó_Raiz.Filho_Esquerda = Treinar_Arvore(Dados_Esquerda, Profundidade_Atual + 1)
+    Nó_Raiz.Filho_Direita = Treinar_Arvore(Dados_Direita, Profundidade_Atual + 1)
+    // 6. Retorno
+    RETORNAR Nó_Raiz
+FIM FUNÇÃO
+// Chamada Inicial:
+Arvore_Final = Treinar_Arvore(Dataset_Completo, 0)
+
